@@ -47,13 +47,15 @@ function revealHidden(text) {
     .replace(/\n/g, "<br>");
 }
 
-function renderMdPreview(el, text) {
+async function renderMdPreview(el, text) {
   const clean = text.replace(/\u200F/g, "").replace(/\u200E/g, "");
-  const html = window.electronAPI.renderMarkdown(clean);
+  const html = await window.electronAPI.renderMarkdown(clean);
   el.innerHTML = html;
   el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th").forEach((node) => {
     if (RTL_RANGE.test(node.textContent || "")) {
       node.setAttribute("dir", "rtl");
+    } else {
+      node.setAttribute("dir", "ltr");
     }
   });
 }
@@ -119,11 +121,11 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 });
 
 // --- Output view ---
-function refreshOutputView() {
+async function refreshOutputView() {
   if (isPreviewing && lastOutput) {
     output.style.display = "none";
     mdPreview.style.display = "block";
-    renderMdPreview(mdPreview, lastOutput);
+    await renderMdPreview(mdPreview, lastOutput);
   } else if (isRevealed && lastOutput) {
     output.style.display = "none";
     mdPreview.style.display = "block";
@@ -135,21 +137,21 @@ function refreshOutputView() {
   }
 }
 
-function refreshInputPreview() {
+async function refreshInputPreview() {
   if (isInputPreviewing && input.value) {
     input.style.display = "none";
     inputMdPreview.style.display = "block";
-    renderMdPreview(inputMdPreview, input.value);
+    await renderMdPreview(inputMdPreview, input.value);
   } else {
     input.style.display = "";
     inputMdPreview.style.display = "none";
   }
 }
 
-function updateOutput(text, count) {
+async function updateOutput(text, count) {
   lastOutput = text;
   fixCountEl.textContent = `${toPersianNum(count)} اصلاح`;
-  refreshOutputView();
+  await refreshOutputView();
 }
 
 // --- Toast ---
@@ -169,13 +171,13 @@ function updateStats() {
 input.addEventListener("input", updateStats);
 
 // --- Fix ---
-fixBtn.addEventListener("click", () => {
+fixBtn.addEventListener("click", async () => {
   if (!input.value.trim()) {
     showToast("متنی وارد نشده!");
     return;
   }
   const result = fixRTLText(input.value);
-  updateOutput(result.text, result.fixCount);
+  await updateOutput(result.text, result.fixCount);
   if (result.fixCount > 0) {
     statusEl.textContent = `✓ ${toPersianNum(result.fixCount)} خط اصلاح شد`;
     showToast(`${toPersianNum(result.fixCount)} خط اصلاح شد`);
@@ -186,19 +188,19 @@ fixBtn.addEventListener("click", () => {
 });
 
 // --- Force RTL ---
-forceBtn.addEventListener("click", () => {
+forceBtn.addEventListener("click", async () => {
   if (!input.value.trim()) {
     showToast("متنی وارد نشده!");
     return;
   }
   const result = forceRTLAll(input.value);
-  updateOutput(result.text, result.fixCount);
+  await updateOutput(result.text, result.fixCount);
   statusEl.textContent = `✓ RLM به ${toPersianNum(result.fixCount)} خط اضافه شد`;
   showToast(`${toPersianNum(result.fixCount)} خط RTL شد`);
 });
 
 // --- Strip RLM ---
-stripBtn.addEventListener("click", () => {
+stripBtn.addEventListener("click", async () => {
   const source = lastOutput || input.value;
   if (!source.trim()) {
     showToast("متنی وارد نشده!");
@@ -209,13 +211,13 @@ stripBtn.addEventListener("click", () => {
     showToast("RLM ای پیدا نشد!");
     return;
   }
-  updateOutput(result.text, 0);
+  await updateOutput(result.text, 0);
   statusEl.textContent = `✓ ${toPersianNum(result.count)} RLM حذف شد`;
   showToast(`${toPersianNum(result.count)} RLM حذف شد`);
 });
 
 // --- Reveal ---
-revealBtn.addEventListener("click", () => {
+revealBtn.addEventListener("click", async () => {
   if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
@@ -230,11 +232,11 @@ revealBtn.addEventListener("click", () => {
     revealBtn.classList.remove("active");
     showToast("حالت عادی");
   }
-  refreshOutputView();
+  await refreshOutputView();
 });
 
 // --- MD Preview (output) ---
-previewBtn.addEventListener("click", () => {
+previewBtn.addEventListener("click", async () => {
   if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
@@ -249,18 +251,18 @@ previewBtn.addEventListener("click", () => {
     previewBtn.classList.remove("active");
     showToast("حالت عادی");
   }
-  refreshOutputView();
+  await refreshOutputView();
 });
 
 // --- MD Preview (input) ---
-inputPreviewBtn.addEventListener("click", () => {
+inputPreviewBtn.addEventListener("click", async () => {
   if (!input.value.trim()) {
     showToast("متنی وارد نشده!");
     return;
   }
   isInputPreviewing = !isInputPreviewing;
   inputPreviewBtn.classList.toggle("active", isInputPreviewing);
-  refreshInputPreview();
+  await refreshInputPreview();
   showToast(isInputPreviewing ? "پیش‌نمایش Markdown" : "حالت ویرایش");
 });
 
@@ -283,7 +285,7 @@ pasteBtn.addEventListener("click", async () => {
   }
   input.value = text;
   updateStats();
-  if (isInputPreviewing) refreshInputPreview();
+  if (isInputPreviewing) await refreshInputPreview();
   showToast("Paste شد!");
 });
 

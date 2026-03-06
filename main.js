@@ -1,6 +1,16 @@
 const { app, BrowserWindow, ipcMain, clipboard } = require("electron");
 const path = require("path");
 
+let marked;
+async function getMarked() {
+  if (!marked) {
+    const mod = await import("marked");
+    marked = mod.marked;
+    marked.setOptions({ breaks: true, gfm: true });
+  }
+  return marked;
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
@@ -33,4 +43,9 @@ ipcMain.handle("copy-to-clipboard", (_, text) => {
 
 ipcMain.handle("read-clipboard", () => {
   return clipboard.readText();
+});
+
+ipcMain.handle("render-markdown", async (_, text) => {
+  const m = await getMarked();
+  return m.parse(text);
 });
