@@ -48,7 +48,8 @@ function revealHidden(text) {
 }
 
 function renderMdPreview(el, text) {
-  const html = window.electronAPI.renderMarkdown(text);
+  const clean = text.replace(/\u200F/g, "").replace(/\u200E/g, "");
+  const html = window.electronAPI.renderMarkdown(clean);
   el.innerHTML = html;
   el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th").forEach((node) => {
     if (RTL_RANGE.test(node.textContent || "")) {
@@ -198,11 +199,12 @@ forceBtn.addEventListener("click", () => {
 
 // --- Strip RLM ---
 stripBtn.addEventListener("click", () => {
-  if (!input.value.trim()) {
+  const source = lastOutput || input.value;
+  if (!source.trim()) {
     showToast("متنی وارد نشده!");
     return;
   }
-  const result = stripAllRLM(input.value);
+  const result = stripAllRLM(source);
   if (result.count === 0) {
     showToast("RLM ای پیدا نشد!");
     return;
