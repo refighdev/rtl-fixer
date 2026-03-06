@@ -13,7 +13,10 @@
     "appId": "com.rfgh.rtl-fixer",
     "productName": "RTL Fixer",
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Utility"
     },
     "files": [
@@ -25,5 +28,8 @@
   "devDependencies": {
     "electron": "^33.0.0",
     "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "marked": "^17.0.4"
   }
 }

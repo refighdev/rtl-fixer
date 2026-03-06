@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com"
     />
     <title>RTL Fixer</title>
     <link
@@ -58,7 +58,10 @@
         <div class="panel">
           <div class="panel-header">
             <span>متن اصلاح‌شده</span>
-            <button id="copy-btn" class="btn btn-sm">📋 Copy</button>
+            <div class="panel-header-actions">
+              <button id="preview-btn" class="btn btn-sm" title="پیش‌نمایش Markdown">MD</button>
+              <button id="copy-btn" class="btn btn-sm">📋 Copy</button>
+            </div>
           </div>
           <textarea
             id="output"
@@ -67,6 +70,7 @@
             placeholder="متن اصلاح‌شده اینجا نمایش داده می‌شود..."
             spellcheck="false"
           ></textarea>
+          <div id="md-preview" class="md-preview" dir="rtl" style="display:none"></div>
         </div>
       </div>
     </main>

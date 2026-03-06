@@ -18,11 +18,8 @@ function fixRTLText(text) {
     }
     return line;
   });
-  return { text: lines.join("\n"), fixCount, totalLines: lines.length };
+  return { text: lines.join("\n"), fixCount };
 }
-
-const toPersianNum = (n) =>
-  String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
 
 function forceRTLAll(text) {
   let fixCount = 0;
@@ -36,14 +33,22 @@ function forceRTLAll(text) {
 }
 
 function revealHidden(text) {
-  return text.replace(/\u200F/g, "[RLM]").replace(/\u200E/g, "[LRM]");
+  return text
+    .replace(/\u200F/g, '<span class="rlm-mark">[RLM]</span>')
+    .replace(/\u200E/g, '<span class="lrm-mark">[LRM]</span>')
+    .replace(/\n/g, "<br>");
 }
+
+const toPersianNum = (n) =>
+  String(n).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[d]);
 
 const input = document.getElementById("input");
 const output = document.getElementById("output");
+const mdPreview = document.getElementById("md-preview");
 const fixBtn = document.getElementById("fix-btn");
 const forceBtn = document.getElementById("force-btn");
 const revealBtn = document.getElementById("reveal-btn");
+const previewBtn = document.getElementById("preview-btn");
 const copyBtn = document.getElementById("copy-btn");
 const pasteBtn = document.getElementById("paste-btn");
 const clearBtn = document.getElementById("clear-btn");
@@ -54,15 +59,34 @@ const toastEl = document.getElementById("toast");
 
 let lastOutput = "";
 let isRevealed = false;
+let isPreviewing = false;
+
+function refreshOutputView() {
+  if (isPreviewing) {
+    output.style.display = "none";
+    mdPreview.style.display = "block";
+    const html = window.electronAPI.renderMarkdown(lastOutput);
+    mdPreview.innerHTML = html;
+    mdPreview.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th").forEach((el) => {
+      if (RTL_RANGE.test(el.textContent || "")) {
+        el.setAttribute("dir", "rtl");
+      }
+    });
+  } else if (isRevealed) {
+    output.style.display = "none";
+    mdPreview.style.display = "block";
+    mdPreview.innerHTML = revealHidden(lastOutput);
+  } else {
+    output.style.display = "";
+    mdPreview.style.display = "none";
+    output.value = lastOutput;
+  }
+}
 
 function updateOutput(text, count) {
   lastOutput = text;
   fixCountEl.textContent = `${toPersianNum(count)} اصلاح`;
-  if (isRevealed) {
-    output.value = revealHidden(text);
-  } else {
-    output.value = text;
-  }
+  refreshOutputView();
 }
 
 let toastTimer;
@@ -118,14 +142,34 @@ revealBtn.addEventListener("click", () => {
 
   isRevealed = !isRevealed;
   if (isRevealed) {
-    output.value = revealHidden(lastOutput);
+    isPreviewing = false;
+    previewBtn.classList.remove("active");
     revealBtn.classList.add("active");
     showToast("کاراکترهای مخفی نمایش داده شد");
   } else {
-    output.value = lastOutput;
     revealBtn.classList.remove("active");
     showToast("حالت عادی");
   }
+  refreshOutputView();
+});
+
+previewBtn.addEventListener("click", () => {
+  if (!lastOutput) {
+    showToast("اول متن رو اصلاح کن!");
+    return;
+  }
+
+  isPreviewing = !isPreviewing;
+  if (isPreviewing) {
+    isRevealed = false;
+    revealBtn.classList.remove("active");
+    previewBtn.classList.add("active");
+    showToast("پیش‌نمایش Markdown");
+  } else {
+    previewBtn.classList.remove("active");
+    showToast("حالت عادی");
+  }
+  refreshOutputView();
 });
 
 copyBtn.addEventListener("click", async () => {
@@ -153,7 +197,12 @@ clearBtn.addEventListener("click", () => {
   output.value = "";
   lastOutput = "";
   isRevealed = false;
+  isPreviewing = false;
   revealBtn.classList.remove("active");
+  previewBtn.classList.remove("active");
+  mdPreview.style.display = "none";
+  output.style.display = "";
+  mdPreview.innerHTML = "";
   statusEl.textContent = "آماده";
   lineCountEl.textContent = `${toPersianNum(0)} خط`;
   fixCountEl.textContent = `${toPersianNum(0)} اصلاح`;
