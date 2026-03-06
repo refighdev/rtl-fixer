@@ -1,0 +1,29 @@
+{
+  "name": "rtl-fixer",
+  "version": "0.1.0",
+  "description": "Desktop app for fixing bidirectional RTL/LTR text display",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --linux",
+    "build:appimage": "electron-builder --linux AppImage",
+    "build:deb": "electron-builder --linux deb"
+  },
+  "build": {
+    "appId": "com.rfgh.rtl-fixer",
+    "productName": "RTL Fixer",
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com"
+    />
+    <title>RTL Fixer</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-content">
+        <h1>RTL Fixer</h1>
+        <p>اصلاح خودکار متن‌های دوجهته فارسی-انگلیسی</p>
+      </div>
+      <div class="header-actions">
+        <button id="clear-btn" class="btn btn-ghost">پاک کردن</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-header">
+            <span>متن ورودی</span>
+            <button id="paste-btn" class="btn btn-sm">📋 Paste</button>
+          </div>
+          <textarea
+            id="input"
+            dir="rtl"
+            placeholder="متن خود را اینجا وارد کنید یا Paste بزنید..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <div class="controls-center">
+          <button id="fix-btn" class="btn btn-primary" title="اصلاح خطوط مشکل‌دار">
+            <span class="fix-icon">⚡</span>
+            <span>اصلاح</span>
+          </button>
+          <button id="force-btn" class="btn btn-secondary" title="اضافه کردن RLM به همه خطوط">
+            <span>⟳</span>
+            <span>همه RTL</span>
+          </button>
+          <button id="reveal-btn" class="btn btn-outline" title="نمایش کاراکترهای مخفی">
+            <span>👁</span>
+            <span>مخفی‌ها</span>
+          </button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <span>متن اصلاح‌شده</span>
+            <button id="copy-btn" class="btn btn-sm">📋 Copy</button>
+          </div>
+          <textarea
+            id="output"
+            dir="rtl"
+            readonly
+            placeholder="متن اصلاح‌شده اینجا نمایش داده می‌شود..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div id="status">آماده</div>
+      <div class="stats">
+        <span id="line-count">۰ خط</span>
+        <span class="sep">|</span>
+        <span id="fix-count">۰ اصلاح</span>
+      </div>
+    </footer>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
