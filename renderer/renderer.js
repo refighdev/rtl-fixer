@@ -32,11 +32,29 @@ function forceRTLAll(text) {
   return { text: lines.join("\n"), fixCount };
 }
 
+function stripAllRLM(text) {
+  const count = (text.match(/\u200F/g) || []).length;
+  return { text: text.replace(/\u200F/g, ""), count };
+}
+
 function revealHidden(text) {
   return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
     .replace(/\u200F/g, '<span class="rlm-mark">[RLM]</span>')
     .replace(/\u200E/g, '<span class="lrm-mark">[LRM]</span>')
     .replace(/\n/g, "<br>");
+}
+
+function renderMdPreview(el, text) {
+  const html = window.electronAPI.renderMarkdown(text);
+  el.innerHTML = html;
+  el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th").forEach((node) => {
+    if (RTL_RANGE.test(node.textContent || "")) {
+      node.setAttribute("dir", "rtl");
+    }
+  });
 }
 
 const toPersianNum = (n) =>
@@ -45,10 +63,13 @@ const toPersianNum = (n) =>
 const input = document.getElementById("input");
 const output = document.getElementById("output");
 const mdPreview = document.getElementById("md-preview");
+const inputMdPreview = document.getElementById("input-md-preview");
 const fixBtn = document.getElementById("fix-btn");
 const forceBtn = document.getElementById("force-btn");
+const stripBtn = document.getElementById("strip-btn");
 const revealBtn = document.getElementById("reveal-btn");
 const previewBtn = document.getElementById("preview-btn");
+const inputPreviewBtn = document.getElementById("input-preview-btn");
 const copyBtn = document.getElementById("copy-btn");
 const pasteBtn = document.getElementById("paste-btn");
 const clearBtn = document.getElementById("clear-btn");
@@ -60,19 +81,49 @@ const toastEl = document.getElementById("toast");
 let lastOutput = "";
 let isRevealed = false;
 let isPreviewing = false;
+let isInputPreviewing = false;
 
+// --- Theme ---
+function applyTheme(theme) {
+  if (theme === "system") {
+    document.body.removeAttribute("data-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (!prefersDark) {
+      document.body.setAttribute("data-theme", "light");
+    }
+  } else {
+    document.body.setAttribute("data-theme", theme === "light" ? "light" : "");
+    if (theme === "dark") {
+      document.body.removeAttribute("data-theme");
+    }
+  }
+  localStorage.setItem("rtl-fixer-theme", theme);
+
+  document.querySelectorAll(".theme-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.theme === theme);
+  });
+}
+
+const savedTheme = localStorage.getItem("rtl-fixer-theme") || "system";
+applyTheme(savedTheme);
+
+document.querySelectorAll(".theme-btn").forEach((btn) => {
+  btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+});
+
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if ((localStorage.getItem("rtl-fixer-theme") || "system") === "system") {
+    applyTheme("system");
+  }
+});
+
+// --- Output view ---
 function refreshOutputView() {
-  if (isPreviewing) {
+  if (isPreviewing && lastOutput) {
     output.style.display = "none";
     mdPreview.style.display = "block";
-    const html = window.electronAPI.renderMarkdown(lastOutput);
-    mdPreview.innerHTML = html;
-    mdPreview.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th").forEach((el) => {
-      if (RTL_RANGE.test(el.textContent || "")) {
-        el.setAttribute("dir", "rtl");
-      }
-    });
-  } else if (isRevealed) {
+    renderMdPreview(mdPreview, lastOutput);
+  } else if (isRevealed && lastOutput) {
     output.style.display = "none";
     mdPreview.style.display = "block";
     mdPreview.innerHTML = revealHidden(lastOutput);
@@ -83,12 +134,24 @@ function refreshOutputView() {
   }
 }
 
+function refreshInputPreview() {
+  if (isInputPreviewing && input.value) {
+    input.style.display = "none";
+    inputMdPreview.style.display = "block";
+    renderMdPreview(inputMdPreview, input.value);
+  } else {
+    input.style.display = "";
+    inputMdPreview.style.display = "none";
+  }
+}
+
 function updateOutput(text, count) {
   lastOutput = text;
   fixCountEl.textContent = `${toPersianNum(count)} اصلاح`;
   refreshOutputView();
 }
 
+// --- Toast ---
 let toastTimer;
 function showToast(message) {
   toastEl.textContent = message;
@@ -97,22 +160,21 @@ function showToast(message) {
   toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2000);
 }
 
+// --- Stats ---
 function updateStats() {
   const lines = input.value ? input.value.split("\n").length : 0;
   lineCountEl.textContent = `${toPersianNum(lines)} خط`;
 }
-
 input.addEventListener("input", updateStats);
 
+// --- Fix ---
 fixBtn.addEventListener("click", () => {
   if (!input.value.trim()) {
     showToast("متنی وارد نشده!");
     return;
   }
-
   const result = fixRTLText(input.value);
   updateOutput(result.text, result.fixCount);
-
   if (result.fixCount > 0) {
     statusEl.textContent = `✓ ${toPersianNum(result.fixCount)} خط اصلاح شد`;
     showToast(`${toPersianNum(result.fixCount)} خط اصلاح شد`);
@@ -122,24 +184,40 @@ fixBtn.addEventListener("click", () => {
   }
 });
 
+// --- Force RTL ---
 forceBtn.addEventListener("click", () => {
   if (!input.value.trim()) {
     showToast("متنی وارد نشده!");
     return;
   }
-
   const result = forceRTLAll(input.value);
   updateOutput(result.text, result.fixCount);
   statusEl.textContent = `✓ RLM به ${toPersianNum(result.fixCount)} خط اضافه شد`;
   showToast(`${toPersianNum(result.fixCount)} خط RTL شد`);
 });
 
+// --- Strip RLM ---
+stripBtn.addEventListener("click", () => {
+  if (!input.value.trim()) {
+    showToast("متنی وارد نشده!");
+    return;
+  }
+  const result = stripAllRLM(input.value);
+  if (result.count === 0) {
+    showToast("RLM ای پیدا نشد!");
+    return;
+  }
+  updateOutput(result.text, 0);
+  statusEl.textContent = `✓ ${toPersianNum(result.count)} RLM حذف شد`;
+  showToast(`${toPersianNum(result.count)} RLM حذف شد`);
+});
+
+// --- Reveal ---
 revealBtn.addEventListener("click", () => {
   if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
   }
-
   isRevealed = !isRevealed;
   if (isRevealed) {
     isPreviewing = false;
@@ -153,12 +231,12 @@ revealBtn.addEventListener("click", () => {
   refreshOutputView();
 });
 
+// --- MD Preview (output) ---
 previewBtn.addEventListener("click", () => {
   if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
   }
-
   isPreviewing = !isPreviewing;
   if (isPreviewing) {
     isRevealed = false;
@@ -172,6 +250,19 @@ previewBtn.addEventListener("click", () => {
   refreshOutputView();
 });
 
+// --- MD Preview (input) ---
+inputPreviewBtn.addEventListener("click", () => {
+  if (!input.value.trim()) {
+    showToast("متنی وارد نشده!");
+    return;
+  }
+  isInputPreviewing = !isInputPreviewing;
+  inputPreviewBtn.classList.toggle("active", isInputPreviewing);
+  refreshInputPreview();
+  showToast(isInputPreviewing ? "پیش‌نمایش Markdown" : "حالت ویرایش");
+});
+
+// --- Copy ---
 copyBtn.addEventListener("click", async () => {
   if (!lastOutput) {
     showToast("خروجی خالیه!");
@@ -181,6 +272,7 @@ copyBtn.addEventListener("click", async () => {
   showToast("کپی شد!");
 });
 
+// --- Paste ---
 pasteBtn.addEventListener("click", async () => {
   const text = await window.electronAPI.readClipboard();
   if (!text) {
@@ -189,26 +281,34 @@ pasteBtn.addEventListener("click", async () => {
   }
   input.value = text;
   updateStats();
+  if (isInputPreviewing) refreshInputPreview();
   showToast("Paste شد!");
 });
 
+// --- Clear ---
 clearBtn.addEventListener("click", () => {
   input.value = "";
   output.value = "";
   lastOutput = "";
   isRevealed = false;
   isPreviewing = false;
+  isInputPreviewing = false;
   revealBtn.classList.remove("active");
   previewBtn.classList.remove("active");
+  inputPreviewBtn.classList.remove("active");
   mdPreview.style.display = "none";
-  output.style.display = "";
   mdPreview.innerHTML = "";
+  inputMdPreview.style.display = "none";
+  inputMdPreview.innerHTML = "";
+  output.style.display = "";
+  input.style.display = "";
   statusEl.textContent = "آماده";
   lineCountEl.textContent = `${toPersianNum(0)} خط`;
   fixCountEl.textContent = `${toPersianNum(0)} اصلاح`;
   showToast("پاک شد!");
 });
 
+// --- Keyboard shortcut ---
 document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
     e.preventDefault();

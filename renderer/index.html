@@ -21,6 +21,11 @@
         <p>اصلاح خودکار متن‌های دوجهته فارسی-انگلیسی</p>
       </div>
       <div class="header-actions">
+        <div id="theme-switcher" class="theme-switcher">
+          <button data-theme="system" class="theme-btn active" title="تنظیمات سیستم">🖥</button>
+          <button data-theme="light" class="theme-btn" title="روشن">☀</button>
+          <button data-theme="dark" class="theme-btn" title="تاریک">🌙</button>
+        </div>
         <button id="clear-btn" class="btn btn-ghost">پاک کردن</button>
       </div>
     </header>
@@ -30,7 +35,10 @@
         <div class="panel">
           <div class="panel-header">
             <span>متن ورودی</span>
-            <button id="paste-btn" class="btn btn-sm">📋 Paste</button>
+            <div class="panel-header-actions">
+              <button id="input-preview-btn" class="btn btn-sm" title="پیش‌نمایش Markdown">MD</button>
+              <button id="paste-btn" class="btn btn-sm">📋 Paste</button>
+            </div>
           </div>
           <textarea
             id="input"
@@ -38,6 +46,7 @@
             placeholder="متن خود را اینجا وارد کنید یا Paste بزنید..."
             spellcheck="false"
           ></textarea>
+          <div id="input-md-preview" class="md-preview" dir="rtl" style="display:none"></div>
         </div>
 
         <div class="controls-center">
@@ -48,6 +57,10 @@
           <button id="force-btn" class="btn btn-secondary" title="اضافه کردن RLM به همه خطوط">
             <span>⟳</span>
             <span>همه RTL</span>
+          </button>
+          <button id="strip-btn" class="btn btn-danger-outline" title="حذف همه RLM ها">
+            <span>✕</span>
+            <span>حذف RLM</span>
           </button>
           <button id="reveal-btn" class="btn btn-outline" title="نمایش کاراکترهای مخفی">
             <span>👁</span>

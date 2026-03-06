@@ -23,6 +23,28 @@
   --radius-sm: 8px;
   --font: "Vazirmatn", system-ui, -apple-system, sans-serif;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --code-bg: var(--surface-3);
+  --blockquote-bg: rgba(108, 92, 231, 0.05);
+}
+
+[data-theme="light"] {
+  --bg: #f5f5f8;
+  --surface: #ffffff;
+  --surface-2: #f0f0f4;
+  --surface-3: #e6e6ee;
+  --primary: #5b4cdb;
+  --primary-hover: #6c5ce7;
+  --primary-glow: rgba(91, 76, 219, 0.2);
+  --accent: #009e9a;
+  --text: #1a1a2e;
+  --text-dim: #6b6b8a;
+  --text-muted: #a0a0b8;
+  --border: #d8d8e4;
+  --success: #00a37d;
+  --danger: #d63651;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --code-bg: #eeeef4;
+  --blockquote-bg: rgba(91, 76, 219, 0.06);
 }
 
 body {
@@ -34,6 +56,7 @@ body {
   flex-direction: column;
   overflow: hidden;
   user-select: none;
+  transition: background 0.3s, color 0.3s;
 }
 
 header {
@@ -43,6 +66,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .header-content h1 {
@@ -58,6 +82,40 @@ header {
   font-size: 12px;
   color: var(--text-dim);
   margin-top: 2px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.theme-switcher {
+  display: flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.theme-btn {
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.theme-btn:hover {
+  background: var(--surface-3);
+}
+
+.theme-btn.active {
+  background: var(--primary);
+  color: white;
 }
 
 main {
@@ -82,7 +140,7 @@ main {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.3s;
 }
 
 .panel:focus-within {
@@ -100,6 +158,13 @@ main {
   font-weight: 500;
   color: var(--text-dim);
   background: var(--surface-2);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.panel-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 textarea {
@@ -130,6 +195,7 @@ textarea[readonly] {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 6px;
   padding: 0 4px;
   flex-shrink: 0;
 }
@@ -216,6 +282,18 @@ textarea[readonly] {
   color: var(--accent);
 }
 
+.btn-danger-outline {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+}
+
+.btn-danger-outline:hover {
+  background: rgba(233, 69, 96, 0.12);
+}
+
 .btn-ghost {
   background: transparent;
   border-color: transparent;
@@ -234,6 +312,12 @@ textarea[readonly] {
   border-radius: 6px;
 }
 
+.btn-sm.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
 footer {
   padding: 10px 28px;
   background: var(--surface);
@@ -243,6 +327,7 @@ footer {
   align-items: center;
   font-size: 12px;
   color: var(--text-dim);
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .stats {
@@ -261,7 +346,7 @@ footer {
   left: 50%;
   transform: translateX(-50%) translateY(16px);
   background: var(--success);
-  color: #0f0f0f;
+  color: white;
   padding: 8px 20px;
   border-radius: var(--radius-sm);
   font-family: var(--font);
@@ -277,12 +362,6 @@ footer {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-.panel-header-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
 }
 
 .md-preview {
@@ -315,7 +394,6 @@ footer {
   font-size: 1.15em;
   font-weight: 600;
   margin: 0.4em 0 0.2em;
-  color: var(--text);
 }
 
 .md-preview h4,
@@ -342,7 +420,7 @@ footer {
 }
 
 .md-preview code {
-  background: var(--surface-3);
+  background: var(--code-bg);
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.9em;
@@ -351,7 +429,7 @@ footer {
 }
 
 .md-preview pre {
-  background: var(--surface-3);
+  background: var(--code-bg);
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   overflow-x: auto;
@@ -373,7 +451,7 @@ footer {
   padding: 4px 12px;
   margin: 0.5em 0;
   color: var(--text-dim);
-  background: rgba(108, 92, 231, 0.05);
+  background: var(--blockquote-bg);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -403,7 +481,6 @@ footer {
 
 .md-preview strong {
   font-weight: 700;
-  color: var(--text);
 }
 
 .md-preview a {
@@ -416,7 +493,7 @@ footer {
 }
 
 .rlm-mark {
-  color: #e94560;
+  color: var(--danger);
   font-weight: 700;
   font-size: 0.8em;
   background: rgba(233, 69, 96, 0.15);
