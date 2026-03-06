@@ -67,16 +67,61 @@ function revealHidden(text) {
     .replace(/\n/g, "<br>");
 }
 
+function setDirForText(el, text) {
+  if (RTL_RANGE.test(text)) {
+    el.setAttribute("dir", "rtl");
+    el.style.textAlign = "right";
+  } else {
+    el.setAttribute("dir", "ltr");
+    el.style.textAlign = "left";
+  }
+}
+
+function splitByBr(node) {
+  const brs = node.querySelectorAll("br");
+  if (brs.length === 0) {
+    setDirForText(node, node.textContent || "");
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  let span = document.createElement("span");
+  span.style.display = "block";
+
+  [...node.childNodes].forEach((child) => {
+    if (child.nodeName === "BR") {
+      setDirForText(span, span.textContent || "");
+      fragment.appendChild(span);
+      span = document.createElement("span");
+      span.style.display = "block";
+    } else {
+      span.appendChild(child.cloneNode(true));
+    }
+  });
+  setDirForText(span, span.textContent || "");
+  fragment.appendChild(span);
+  node.innerHTML = "";
+  node.appendChild(fragment);
+}
+
 async function renderMdPreview(el, text) {
   const clean = text.replace(/\u200F/g, "").replace(/\u200E/g, "");
   const html = await window.electronAPI.renderMarkdown(clean);
   el.innerHTML = html;
-  el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th").forEach((node) => {
-    if (RTL_RANGE.test(node.textContent || "")) {
-      node.setAttribute("dir", "rtl");
+  el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, td, th").forEach(splitByBr);
+  el.querySelectorAll("ol, ul").forEach((list) => {
+    if (RTL_RANGE.test(list.textContent || "")) {
+      list.setAttribute("dir", "rtl");
     } else {
-      node.setAttribute("dir", "ltr");
+      list.setAttribute("dir", "ltr");
     }
+  });
+  el.querySelectorAll("blockquote").forEach((bq) => {
+    bq.querySelectorAll("p").forEach(splitByBr);
+    if (!bq.querySelector("p")) setDirForText(bq, bq.textContent || "");
+  });
+  el.querySelectorAll("pre").forEach((pre) => {
+    pre.setAttribute("dir", "ltr");
+    pre.style.textAlign = "left";
   });
 }
 
