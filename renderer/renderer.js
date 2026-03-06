@@ -53,6 +53,17 @@ const fixCountEl = document.getElementById("fix-count");
 const toastEl = document.getElementById("toast");
 
 let lastOutput = "";
+let isRevealed = false;
+
+function updateOutput(text, count) {
+  lastOutput = text;
+  fixCountEl.textContent = `${toPersianNum(count)} اصلاح`;
+  if (isRevealed) {
+    output.value = revealHidden(text);
+  } else {
+    output.value = text;
+  }
+}
 
 let toastTimer;
 function showToast(message) {
@@ -76,9 +87,7 @@ fixBtn.addEventListener("click", () => {
   }
 
   const result = fixRTLText(input.value);
-  output.value = result.text;
-  lastOutput = result.text;
-  fixCountEl.textContent = `${toPersianNum(result.fixCount)} اصلاح`;
+  updateOutput(result.text, result.fixCount);
 
   if (result.fixCount > 0) {
     statusEl.textContent = `✓ ${toPersianNum(result.fixCount)} خط اصلاح شد`;
@@ -96,41 +105,35 @@ forceBtn.addEventListener("click", () => {
   }
 
   const result = forceRTLAll(input.value);
-  output.value = result.text;
-  lastOutput = result.text;
-  fixCountEl.textContent = `${toPersianNum(result.fixCount)} اصلاح`;
+  updateOutput(result.text, result.fixCount);
   statusEl.textContent = `✓ RLM به ${toPersianNum(result.fixCount)} خط اضافه شد`;
   showToast(`${toPersianNum(result.fixCount)} خط RTL شد`);
 });
 
-let isRevealed = false;
 revealBtn.addEventListener("click", () => {
-  const source = lastOutput || output.value;
-  if (!source) {
+  if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
   }
 
   isRevealed = !isRevealed;
   if (isRevealed) {
-    output.value = revealHidden(source);
-    output.dir = "ltr";
+    output.value = revealHidden(lastOutput);
     revealBtn.classList.add("active");
     showToast("کاراکترهای مخفی نمایش داده شد");
   } else {
     output.value = lastOutput;
-    output.dir = "rtl";
     revealBtn.classList.remove("active");
     showToast("حالت عادی");
   }
 });
 
 copyBtn.addEventListener("click", async () => {
-  if (!output.value) {
+  if (!lastOutput) {
     showToast("خروجی خالیه!");
     return;
   }
-  await window.electronAPI.copyToClipboard(output.value);
+  await window.electronAPI.copyToClipboard(lastOutput);
   showToast("کپی شد!");
 });
 
@@ -148,6 +151,9 @@ pasteBtn.addEventListener("click", async () => {
 clearBtn.addEventListener("click", () => {
   input.value = "";
   output.value = "";
+  lastOutput = "";
+  isRevealed = false;
+  revealBtn.classList.remove("active");
   statusEl.textContent = "آماده";
   lineCountEl.textContent = `${toPersianNum(0)} خط`;
   fixCountEl.textContent = `${toPersianNum(0)} اصلاح`;
