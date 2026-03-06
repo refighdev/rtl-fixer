@@ -1,12 +1,28 @@
 const RLM = "\u200F";
+const LRM = "\u200E";
 
 const RTL_RANGE =
   /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+const STRONG_LTR = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
+
+function startsWithNeutral(line) {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  return !STRONG_LTR.test(trimmed[0]) && !RTL_RANGE.test(trimmed[0]);
+}
 
 function lineNeedsRLM(line) {
   if (!line.trim()) return false;
   if (line.startsWith(RLM)) return false;
   return RTL_RANGE.test(line);
+}
+
+function lineNeedsLRM(line) {
+  if (!line.trim()) return false;
+  if (line.startsWith(LRM)) return false;
+  if (RTL_RANGE.test(line)) return false;
+  return startsWithNeutral(line);
 }
 
 function fixRTLText(text) {
@@ -15,6 +31,10 @@ function fixRTLText(text) {
     if (lineNeedsRLM(line)) {
       fixCount++;
       return RLM + line;
+    }
+    if (lineNeedsLRM(line)) {
+      fixCount++;
+      return LRM + line;
     }
     return line;
   });
@@ -32,9 +52,9 @@ function forceRTLAll(text) {
   return { text: lines.join("\n"), fixCount };
 }
 
-function stripAllRLM(text) {
-  const count = (text.match(/\u200F/g) || []).length;
-  return { text: text.replace(/\u200F/g, ""), count };
+function stripAllMarks(text) {
+  const count = (text.match(/[\u200F\u200E]/g) || []).length;
+  return { text: text.replace(/[\u200F\u200E]/g, ""), count };
 }
 
 function revealHidden(text) {
@@ -206,7 +226,7 @@ stripBtn.addEventListener("click", async () => {
     showToast("متنی وارد نشده!");
     return;
   }
-  const result = stripAllRLM(source);
+  const result = stripAllMarks(source);
   if (result.count === 0) {
     showToast("RLM ای پیدا نشد!");
     return;

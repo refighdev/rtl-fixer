@@ -180,10 +180,13 @@ textarea {
   resize: none;
   outline: none;
   user-select: text;
+  unicode-bidi: plaintext;
 }
 
 textarea::placeholder {
   color: var(--text-muted);
+  direction: rtl;
+  text-align: right;
 }
 
 textarea[readonly] {
