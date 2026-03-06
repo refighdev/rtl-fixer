@@ -5,6 +5,7 @@ const RTL_RANGE =
   /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
 
 const STRONG_LTR = /[A-Za-z\u00C0-\u024F\u1E00-\u1EFF]/;
+const LIST_LINE = /^\s*(\d+[.)]\s|[-*+]\s)/;
 
 function startsWithNeutral(line) {
   const trimmed = line.trim();
@@ -12,44 +13,56 @@ function startsWithNeutral(line) {
   return !STRONG_LTR.test(trimmed[0]) && !RTL_RANGE.test(trimmed[0]);
 }
 
-function lineNeedsRLM(line) {
-  if (!line.trim()) return false;
-  if (line.startsWith(RLM)) return false;
-  return RTL_RANGE.test(line);
+function stripMarksFromLine(line) {
+  return line.replace(/^[\u200F\u200E]+/, "");
 }
 
-function lineNeedsLRM(line) {
-  if (!line.trim()) return false;
-  if (line.startsWith(LRM)) return false;
-  if (RTL_RANGE.test(line)) return false;
-  return startsWithNeutral(line);
+function pickMark(clean, listDir) {
+  const isList = LIST_LINE.test(clean);
+  if (isList && listDir !== "auto") {
+    return listDir === "rtl" ? RLM : LRM;
+  }
+  if (RTL_RANGE.test(clean)) return RLM;
+  if (startsWithNeutral(clean)) return LRM;
+  return null;
 }
 
-function fixRTLText(text) {
+function fixAuto(text, listDir) {
   let fixCount = 0;
   const lines = text.split("\n").map((line) => {
-    if (lineNeedsRLM(line)) {
+    const clean = stripMarksFromLine(line);
+    if (!clean.trim()) return clean;
+    const mark = pickMark(clean, listDir);
+    if (mark) {
       fixCount++;
-      return RLM + line;
+      return mark + clean;
     }
-    if (lineNeedsLRM(line)) {
-      fixCount++;
-      return LRM + line;
-    }
-    return line;
+    return clean;
   });
   return { text: lines.join("\n"), fixCount };
 }
 
-function forceRTLAll(text) {
+function fixForceDir(text, mark, listDir) {
   let fixCount = 0;
   const lines = text.split("\n").map((line) => {
-    if (!line.trim()) return line;
-    if (line.startsWith(RLM)) return line;
+    const clean = stripMarksFromLine(line);
+    if (!clean.trim()) return clean;
+    const isList = LIST_LINE.test(clean);
+    if (isList && listDir !== "auto") {
+      fixCount++;
+      return (listDir === "rtl" ? RLM : LRM) + clean;
+    }
     fixCount++;
-    return RLM + line;
+    return mark + clean;
   });
   return { text: lines.join("\n"), fixCount };
+}
+
+function applyFix(text) {
+  const listDir = settings.listDir;
+  if (settings.fixMode === "rtl") return fixForceDir(text, RLM, listDir);
+  if (settings.fixMode === "ltr") return fixForceDir(text, LRM, listDir);
+  return fixAuto(text, listDir);
 }
 
 function stripAllMarks(text) {
@@ -58,71 +71,25 @@ function stripAllMarks(text) {
 }
 
 function revealHidden(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\u200F/g, '<span class="rlm-mark">[RLM]</span>')
-    .replace(/\u200E/g, '<span class="lrm-mark">[LRM]</span>')
-    .replace(/\n/g, "<br>");
+  return text.split("\n").map((line) => {
+    const escaped = line
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\u200F/g, '<span class="rlm-mark">ر </span>')
+      .replace(/\u200E/g, '<span class="lrm-mark">L </span>');
+    return `<span style="display:block">${escaped}</span>`;
+  }).join("");
 }
 
-function setDirForText(el, text) {
-  if (RTL_RANGE.test(text)) {
-    el.setAttribute("dir", "rtl");
-    el.style.textAlign = "right";
-  } else {
-    el.setAttribute("dir", "ltr");
-    el.style.textAlign = "left";
-  }
-}
-
-function splitByBr(node) {
-  const brs = node.querySelectorAll("br");
-  if (brs.length === 0) {
-    setDirForText(node, node.textContent || "");
-    return;
-  }
-  const fragment = document.createDocumentFragment();
-  let span = document.createElement("span");
-  span.style.display = "block";
-
-  [...node.childNodes].forEach((child) => {
-    if (child.nodeName === "BR") {
-      setDirForText(span, span.textContent || "");
-      fragment.appendChild(span);
-      span = document.createElement("span");
-      span.style.display = "block";
-    } else {
-      span.appendChild(child.cloneNode(true));
-    }
-  });
-  setDirForText(span, span.textContent || "");
-  fragment.appendChild(span);
-  node.innerHTML = "";
-  node.appendChild(fragment);
+function prepareForMarkdown(text) {
+  return text.replace(/^([\u200F\u200E])(\s*(?:\d+[.)]\s|[-*+]\s|#{1,6}\s|>\s?))/gm, "$2$1");
 }
 
 async function renderMdPreview(el, text) {
-  const clean = text.replace(/\u200F/g, "").replace(/\u200E/g, "");
-  const html = await window.electronAPI.renderMarkdown(clean);
+  const prepared = prepareForMarkdown(text);
+  const html = await window.electronAPI.renderMarkdown(prepared);
   el.innerHTML = html;
-  el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, td, th").forEach(splitByBr);
-  el.querySelectorAll("ol, ul").forEach((list) => {
-    if (RTL_RANGE.test(list.textContent || "")) {
-      list.setAttribute("dir", "rtl");
-    } else {
-      list.setAttribute("dir", "ltr");
-    }
-  });
-  el.querySelectorAll("blockquote").forEach((bq) => {
-    bq.querySelectorAll("p").forEach(splitByBr);
-    if (!bq.querySelector("p")) setDirForText(bq, bq.textContent || "");
-  });
-  el.querySelectorAll("pre").forEach((pre) => {
-    pre.setAttribute("dir", "ltr");
-    pre.style.textAlign = "left";
-  });
 }
 
 const toPersianNum = (n) =>
@@ -133,7 +100,6 @@ const output = document.getElementById("output");
 const mdPreview = document.getElementById("md-preview");
 const inputMdPreview = document.getElementById("input-md-preview");
 const fixBtn = document.getElementById("fix-btn");
-const forceBtn = document.getElementById("force-btn");
 const stripBtn = document.getElementById("strip-btn");
 const revealBtn = document.getElementById("reveal-btn");
 const previewBtn = document.getElementById("preview-btn");
@@ -146,10 +112,58 @@ const lineCountEl = document.getElementById("line-count");
 const fixCountEl = document.getElementById("fix-count");
 const toastEl = document.getElementById("toast");
 
+const settingsBtn = document.getElementById("settings-btn");
+const settingsBar = document.getElementById("settings-bar");
+
 let lastOutput = "";
 let isRevealed = false;
 let isPreviewing = false;
 let isInputPreviewing = false;
+
+// --- Settings ---
+const settings = {
+  fixMode: localStorage.getItem("rtl-fixer-fixMode") || "auto",
+  listDir: localStorage.getItem("rtl-fixer-listDir") || "auto",
+};
+
+function saveSetting(key, val) {
+  settings[key] = val;
+  localStorage.setItem(`rtl-fixer-${key}`, val);
+}
+
+settingsBtn.addEventListener("click", () => {
+  const visible = settingsBar.style.display !== "none";
+  settingsBar.style.display = visible ? "none" : "flex";
+  settingsBtn.classList.toggle("active-ghost", !visible);
+});
+
+function initSegmented(id, settingKey, onChange) {
+  document.querySelectorAll(`#${id} .seg-btn`).forEach((btn) => {
+    if (btn.dataset.val === settings[settingKey]) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+    btn.addEventListener("click", async () => {
+      document.querySelectorAll(`#${id} .seg-btn`).forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      saveSetting(settingKey, btn.dataset.val);
+      if (onChange) await onChange();
+    });
+  });
+}
+
+async function onSettingChange() {
+  if (lastOutput && input.value.trim()) {
+    const result = applyFix(input.value);
+    await updateOutput(result.text, result.fixCount);
+    statusEl.textContent = `✓ ${toPersianNum(result.fixCount)} خط اصلاح شد`;
+  }
+  if (isInputPreviewing && input.value) await refreshInputPreview();
+}
+
+initSegmented("fix-mode-switcher", "fixMode", onSettingChange);
+initSegmented("list-dir-switcher", "listDir", onSettingChange);
 
 // --- Theme ---
 function applyTheme(theme) {
@@ -241,7 +255,7 @@ fixBtn.addEventListener("click", async () => {
     showToast("متنی وارد نشده!");
     return;
   }
-  const result = fixRTLText(input.value);
+  const result = applyFix(input.value);
   await updateOutput(result.text, result.fixCount);
   if (result.fixCount > 0) {
     statusEl.textContent = `✓ ${toPersianNum(result.fixCount)} خط اصلاح شد`;
@@ -252,19 +266,7 @@ fixBtn.addEventListener("click", async () => {
   }
 });
 
-// --- Force RTL ---
-forceBtn.addEventListener("click", async () => {
-  if (!input.value.trim()) {
-    showToast("متنی وارد نشده!");
-    return;
-  }
-  const result = forceRTLAll(input.value);
-  await updateOutput(result.text, result.fixCount);
-  statusEl.textContent = `✓ RLM به ${toPersianNum(result.fixCount)} خط اضافه شد`;
-  showToast(`${toPersianNum(result.fixCount)} خط RTL شد`);
-});
-
-// --- Strip RLM ---
+// --- Strip ---
 stripBtn.addEventListener("click", async () => {
   const source = lastOutput || input.value;
   if (!source.trim()) {
@@ -273,12 +275,12 @@ stripBtn.addEventListener("click", async () => {
   }
   const result = stripAllMarks(source);
   if (result.count === 0) {
-    showToast("RLM ای پیدا نشد!");
+    showToast("نشانه‌ای پیدا نشد!");
     return;
   }
   await updateOutput(result.text, 0);
-  statusEl.textContent = `✓ ${toPersianNum(result.count)} RLM حذف شد`;
-  showToast(`${toPersianNum(result.count)} RLM حذف شد`);
+  statusEl.textContent = `✓ ${toPersianNum(result.count)} نشانه حذف شد`;
+  showToast(`${toPersianNum(result.count)} نشانه حذف شد`);
 });
 
 // --- Reveal ---

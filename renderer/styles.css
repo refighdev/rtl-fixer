@@ -309,6 +309,11 @@ textarea[readonly] {
   background: rgba(233, 69, 96, 0.08);
 }
 
+.btn-ghost.active-ghost {
+  color: var(--accent);
+  background: rgba(0, 206, 201, 0.1);
+}
+
 .btn-sm {
   padding: 4px 10px;
   font-size: 11px;
@@ -375,6 +380,11 @@ footer {
   line-height: 1.9;
   color: var(--text);
   user-select: text;
+  unicode-bidi: plaintext;
+}
+
+.md-preview * {
+  unicode-bidi: plaintext;
 }
 
 .md-preview h1 {
@@ -413,8 +423,8 @@ footer {
 
 .md-preview ul,
 .md-preview ol {
-  padding-right: 1.5em;
-  padding-left: 0;
+  padding-inline-start: 1.5em;
+  padding-inline-end: 0;
   margin: 0.4em 0;
 }
 
@@ -449,13 +459,13 @@ footer {
 }
 
 .md-preview blockquote {
-  border-right: 3px solid var(--primary);
-  border-left: none;
+  border-inline-start: 3px solid var(--primary);
+  border-inline-end: none;
   padding: 4px 12px;
   margin: 0.5em 0;
   color: var(--text-dim);
   background: var(--blockquote-bg);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  border-radius: var(--radius-sm);
 }
 
 .md-preview table {
@@ -468,7 +478,7 @@ footer {
 .md-preview td {
   border: 1px solid var(--border);
   padding: 8px 12px;
-  text-align: right;
+  text-align: start;
 }
 
 .md-preview th {
@@ -495,26 +505,88 @@ footer {
   text-decoration: underline;
 }
 
+.rlm-mark,
+.lrm-mark {
+  font-weight: 700;
+  font-size: 0.75em;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-family: var(--font);
+  vertical-align: middle;
+  unicode-bidi: normal;
+}
+
 .rlm-mark {
   color: var(--danger);
-  font-weight: 700;
-  font-size: 0.8em;
   background: rgba(233, 69, 96, 0.15);
-  padding: 1px 4px;
-  border-radius: 3px;
   border: 1px solid rgba(233, 69, 96, 0.3);
-  font-family: monospace;
 }
 
 .lrm-mark {
   color: var(--accent);
-  font-weight: 700;
-  font-size: 0.8em;
   background: rgba(0, 206, 201, 0.15);
-  padding: 1px 4px;
-  border-radius: 3px;
   border: 1px solid rgba(0, 206, 201, 0.3);
-  font-family: monospace;
+}
+
+.settings-bar {
+  padding: 8px 28px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.setting-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.segmented-control {
+  display: flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.seg-btn {
+  padding: 5px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.seg-btn:hover {
+  background: var(--surface-3);
+}
+
+.seg-btn.active {
+  background: var(--primary);
+  color: white;
 }
 
 @media (max-width: 900px) {
