@@ -17,22 +17,27 @@ function stripMarksFromLine(line) {
   return line.replace(/^[\u200F\u200E]+/, "");
 }
 
-function pickMark(clean, listDir) {
+function pickMark(clean, listDir, neutralFix) {
   const isList = LIST_LINE.test(clean);
   if (isList && listDir !== "auto") {
     return listDir === "rtl" ? RLM : LRM;
   }
-  if (RTL_RANGE.test(clean)) return RLM;
-  if (startsWithNeutral(clean)) return LRM;
+  const hasRTL = RTL_RANGE.test(clean);
+  const hasLTR = STRONG_LTR.test(clean);
+  if (hasRTL && hasLTR) return RLM;
+  if (startsWithNeutral(clean) && neutralFix) {
+    if (hasRTL) return RLM;
+    if (hasLTR) return LRM;
+  }
   return null;
 }
 
-function fixAuto(text, listDir) {
+function fixAuto(text, listDir, neutralFix) {
   let fixCount = 0;
   const lines = text.split("\n").map((line) => {
     const clean = stripMarksFromLine(line);
     if (!clean.trim()) return clean;
-    const mark = pickMark(clean, listDir);
+    const mark = pickMark(clean, listDir, neutralFix);
     if (mark) {
       fixCount++;
       return mark + clean;
@@ -60,9 +65,10 @@ function fixForceDir(text, mark, listDir) {
 
 function applyFix(text) {
   const listDir = settings.listDir;
+  const neutralFix = settings.neutralFix === "on";
   if (settings.fixMode === "rtl") return fixForceDir(text, RLM, listDir);
   if (settings.fixMode === "ltr") return fixForceDir(text, LRM, listDir);
-  return fixAuto(text, listDir);
+  return fixAuto(text, listDir, neutralFix);
 }
 
 function stripAllMarks(text) {
@@ -87,9 +93,15 @@ function prepareForMarkdown(text) {
 }
 
 async function renderMdPreview(el, text) {
-  const prepared = prepareForMarkdown(text);
-  const html = await window.electronAPI.renderMarkdown(prepared);
+  const source = settings.mdPrepare === "on" ? prepareForMarkdown(text) : text;
+  const html = await window.electronAPI.renderMarkdown(source);
   el.innerHTML = html;
+  if (settings.mdAutoDir === "on") {
+    el.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th, ol, ul").forEach((node) => {
+      node.setAttribute("dir", "auto");
+    });
+    el.querySelectorAll("pre").forEach((pre) => pre.setAttribute("dir", "ltr"));
+  }
 }
 
 const toPersianNum = (n) =>
@@ -116,14 +128,17 @@ const settingsBtn = document.getElementById("settings-btn");
 const settingsBar = document.getElementById("settings-bar");
 
 let lastOutput = "";
-let isRevealed = false;
-let isPreviewing = false;
+let isRevealed = localStorage.getItem("rtl-fixer-isRevealed") === "true";
+let isPreviewing = localStorage.getItem("rtl-fixer-isPreviewing") === "true";
 let isInputPreviewing = false;
 
 // --- Settings ---
 const settings = {
   fixMode: localStorage.getItem("rtl-fixer-fixMode") || "auto",
   listDir: localStorage.getItem("rtl-fixer-listDir") || "auto",
+  neutralFix: localStorage.getItem("rtl-fixer-neutralFix") || "off",
+  mdPrepare: localStorage.getItem("rtl-fixer-mdPrepare") || "off",
+  mdAutoDir: localStorage.getItem("rtl-fixer-mdAutoDir") || "off",
 };
 
 function saveSetting(key, val) {
@@ -131,10 +146,17 @@ function saveSetting(key, val) {
   localStorage.setItem(`rtl-fixer-${key}`, val);
 }
 
+const savedSettingsBarOpen = localStorage.getItem("rtl-fixer-settingsBarOpen") === "true";
+if (savedSettingsBarOpen) {
+  settingsBar.style.display = "flex";
+  settingsBtn.classList.add("active-ghost");
+}
+
 settingsBtn.addEventListener("click", () => {
   const visible = settingsBar.style.display !== "none";
   settingsBar.style.display = visible ? "none" : "flex";
   settingsBtn.classList.toggle("active-ghost", !visible);
+  localStorage.setItem("rtl-fixer-settingsBarOpen", !visible);
 });
 
 function initSegmented(id, settingKey, onChange) {
@@ -162,8 +184,16 @@ async function onSettingChange() {
   if (isInputPreviewing && input.value) await refreshInputPreview();
 }
 
+async function onMdSettingChange() {
+  if (isPreviewing || isRevealed) await refreshOutputView();
+  if (isInputPreviewing && input.value) await refreshInputPreview();
+}
+
 initSegmented("fix-mode-switcher", "fixMode", onSettingChange);
 initSegmented("list-dir-switcher", "listDir", onSettingChange);
+initSegmented("neutral-fix-switcher", "neutralFix", onSettingChange);
+initSegmented("md-prepare-switcher", "mdPrepare", onMdSettingChange);
+initSegmented("md-autodir-switcher", "mdAutoDir", onMdSettingChange);
 
 // --- Theme ---
 function applyTheme(theme) {
@@ -200,12 +230,28 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () 
 });
 
 // --- Output view ---
+function revealInHtml(html) {
+  return html
+    .replace(/\u200F/g, '<span class="rlm-mark">ر </span>')
+    .replace(/\u200E/g, '<span class="lrm-mark">L </span>');
+}
+
 async function refreshOutputView() {
-  if (isPreviewing && lastOutput) {
+  if (!lastOutput) {
+    output.style.display = "";
+    mdPreview.style.display = "none";
+    output.value = "";
+    return;
+  }
+
+  if (isPreviewing) {
     output.style.display = "none";
     mdPreview.style.display = "block";
     await renderMdPreview(mdPreview, lastOutput);
-  } else if (isRevealed && lastOutput) {
+    if (isRevealed) {
+      mdPreview.innerHTML = revealInHtml(mdPreview.innerHTML);
+    }
+  } else if (isRevealed) {
     output.style.display = "none";
     mdPreview.style.display = "block";
     mdPreview.innerHTML = revealHidden(lastOutput);
@@ -284,40 +330,30 @@ stripBtn.addEventListener("click", async () => {
 });
 
 // --- Reveal ---
+if (isRevealed) revealBtn.classList.add("active");
 revealBtn.addEventListener("click", async () => {
   if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
   }
   isRevealed = !isRevealed;
-  if (isRevealed) {
-    isPreviewing = false;
-    previewBtn.classList.remove("active");
-    revealBtn.classList.add("active");
-    showToast("کاراکترهای مخفی نمایش داده شد");
-  } else {
-    revealBtn.classList.remove("active");
-    showToast("حالت عادی");
-  }
+  revealBtn.classList.toggle("active", isRevealed);
+  localStorage.setItem("rtl-fixer-isRevealed", isRevealed);
+  showToast(isRevealed ? "نمایش مخفی‌ها" : "حالت عادی");
   await refreshOutputView();
 });
 
 // --- MD Preview (output) ---
+if (isPreviewing) previewBtn.classList.add("active");
 previewBtn.addEventListener("click", async () => {
   if (!lastOutput) {
     showToast("اول متن رو اصلاح کن!");
     return;
   }
   isPreviewing = !isPreviewing;
-  if (isPreviewing) {
-    isRevealed = false;
-    revealBtn.classList.remove("active");
-    previewBtn.classList.add("active");
-    showToast("پیش‌نمایش Markdown");
-  } else {
-    previewBtn.classList.remove("active");
-    showToast("حالت عادی");
-  }
+  previewBtn.classList.toggle("active", isPreviewing);
+  localStorage.setItem("rtl-fixer-isPreviewing", isPreviewing);
+  showToast(isPreviewing ? "پیش‌نمایش Markdown" : "حالت عادی");
   await refreshOutputView();
 });
 
@@ -334,12 +370,39 @@ inputPreviewBtn.addEventListener("click", async () => {
 });
 
 // --- Copy ---
+function extractDisplayedText(container) {
+  const parts = [];
+  for (const child of container.children) {
+    const tag = child.tagName.toLowerCase();
+    if (tag === "ol") {
+      let i = parseInt(child.getAttribute("start") || "1", 10);
+      for (const li of child.querySelectorAll(":scope > li")) {
+        parts.push(`${i}. ${li.innerText}`);
+        i++;
+      }
+    } else if (tag === "ul") {
+      for (const li of child.querySelectorAll(":scope > li")) {
+        parts.push(`- ${li.innerText}`);
+      }
+    } else {
+      parts.push(child.innerText);
+    }
+  }
+  return parts.join("\n");
+}
+
 copyBtn.addEventListener("click", async () => {
   if (!lastOutput) {
     showToast("خروجی خالیه!");
     return;
   }
-  await window.electronAPI.copyToClipboard(lastOutput);
+  let textToCopy;
+  if (isPreviewing || isRevealed) {
+    textToCopy = extractDisplayedText(mdPreview);
+  } else {
+    textToCopy = lastOutput;
+  }
+  await window.electronAPI.copyToClipboard(textToCopy);
   showToast("کپی شد!");
 });
 

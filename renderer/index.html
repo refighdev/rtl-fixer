@@ -47,7 +47,7 @@
             placeholder="متن خود را اینجا وارد کنید یا Paste بزنید..."
             spellcheck="false"
           ></textarea>
-          <div id="input-md-preview" class="md-preview" dir="ltr" style="display:none"></div>
+          <div id="input-md-preview" class="md-preview" dir="auto" style="display:none"></div>
         </div>
 
         <div class="controls-center">
@@ -80,7 +80,7 @@
             placeholder="متن اصلاح‌شده اینجا نمایش داده می‌شود..."
             spellcheck="false"
           ></textarea>
-          <div id="md-preview" class="md-preview" dir="ltr" style="display:none"></div>
+          <div id="md-preview" class="md-preview" dir="auto" style="display:none"></div>
         </div>
       </div>
     </main>
@@ -97,8 +97,8 @@
     <div id="toast" class="toast"></div>
 
     <div id="settings-bar" class="settings-bar" style="display:none">
-      <div class="setting-row">
-        <span class="setting-title">حالت اصلاح</span>
+      <div class="setting-row" title="نحوه اضافه کردن کاراکتر جهت (RLM/LRM) به ابتدای خطوط.&#10;خودکار: بر اساس محتوای هر خط تصمیم می‌گیرد.&#10;همه RTL/LTR: همه خطوط را یکسان اصلاح می‌کند.&#10;(هاردکد — روی متن خروجی اعمال می‌شود)">
+        <span class="setting-title">حالت اصلاح (هاردکد)</span>
         <div id="fix-mode-switcher" class="segmented-control">
           <button data-val="auto" class="seg-btn active">خودکار</button>
           <button data-val="rtl" class="seg-btn">همه RTL</button>
@@ -106,12 +106,36 @@
         </div>
       </div>
       <div class="setting-sep"></div>
-      <div class="setting-row">
-        <span class="setting-title">جهت سرتیتر لیست</span>
+      <div class="setting-row" title="جهت سرتیتر لیست‌های شماره‌دار (1. 2.) و بولتی (- *).&#10;خودکار: بر اساس محتوای خط.&#10;راست‌چین/چپ‌چین: اجبار جهت خاص.&#10;(هاردکد — کاراکتر RLM/LRM به متن اضافه می‌شود)">
+        <span class="setting-title">جهت سرتیتر لیست (هاردکد)</span>
         <div id="list-dir-switcher" class="segmented-control">
           <button data-val="auto" class="seg-btn active">خودکار</button>
           <button data-val="rtl" class="seg-btn">راست‌چین</button>
           <button data-val="ltr" class="seg-btn">چپ‌چین</button>
+        </div>
+      </div>
+      <div class="setting-sep"></div>
+      <div class="setting-row" title="وقتی خط با کاراکتر خنثی شروع شود (عدد، پرانتز، براکت...):&#10;اگر بقیه خط انگلیسی باشد → LRM اضافه می‌شود.&#10;اگر بقیه خط فارسی یا مخلوط باشد → RLM اضافه می‌شود.&#10;(هاردکد — روی متن خروجی اعمال می‌شود)">
+        <span class="setting-title">اصلاح شروع خنثی (هاردکد)</span>
+        <div id="neutral-fix-switcher" class="segmented-control">
+          <button data-val="on" class="seg-btn">روشن</button>
+          <button data-val="off" class="seg-btn">خاموش</button>
+        </div>
+      </div>
+      <div class="setting-sep"></div>
+      <div class="setting-row" title="جابجایی کاراکتر جهت از قبل سینتکس مارک‌دان (1. # > -) به بعدش.&#10;تا موتور مارک‌دان بتواند لیست/هدر/بلاک‌کوت را بشناسد.&#10;(هاردکد — جای کاراکتر RLM/LRM در متن کپی‌شده تغییر می‌کند)">
+        <span class="setting-title">آماده‌سازی MD (هاردکد)</span>
+        <div id="md-prepare-switcher" class="segmented-control">
+          <button data-val="on" class="seg-btn">روشن</button>
+          <button data-val="off" class="seg-btn">خاموش</button>
+        </div>
+      </div>
+      <div class="setting-sep"></div>
+      <div class="setting-row" title="اضافه کردن dir=auto روی هر بلاک مارک‌دان (پاراگراف، لیست، هدر...).&#10;تا مرورگر جهت هر بلاک را از محتوایش تشخیص دهد.&#10;(فقط نمایشی — فقط روی پیش‌نمایش MD تأثیر دارد)">
+        <span class="setting-title">جهت خودکار MD (نمایشی)</span>
+        <div id="md-autodir-switcher" class="segmented-control">
+          <button data-val="on" class="seg-btn">روشن</button>
+          <button data-val="off" class="seg-btn">خاموش</button>
         </div>
       </div>
     </div>
