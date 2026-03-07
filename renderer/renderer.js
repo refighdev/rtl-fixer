@@ -92,8 +92,16 @@ function prepareForMarkdown(text) {
   return text.replace(/^([\u200F\u200E])(\s*(?:\d+[.)]\s|[-*+]\s|#{1,6}\s|>\s?))/gm, "$2$1");
 }
 
+function stripMarksForMdPreview(text) {
+  return text
+    .replace(/^[رL] /gm, "")
+    .replace(/^[\u200F\u200E](?=\s*(?:\d+[.)]\s|[-*+]\s|#{1,6}\s|>\s?))/gm, "");
+}
+
 async function renderMdPreview(el, text) {
-  const source = settings.mdPrepare === "on" ? prepareForMarkdown(text) : text;
+  let source = text;
+  if (settings.mdStripMarks === "on") source = stripMarksForMdPreview(source);
+  if (settings.mdPrepare === "on") source = prepareForMarkdown(source);
   const html = await window.electronAPI.renderMarkdown(source);
   el.innerHTML = html;
   if (settings.mdAutoDir === "on") {
@@ -137,6 +145,7 @@ const settings = {
   fixMode: localStorage.getItem("rtl-fixer-fixMode") || "auto",
   listDir: localStorage.getItem("rtl-fixer-listDir") || "auto",
   neutralFix: localStorage.getItem("rtl-fixer-neutralFix") || "off",
+  mdStripMarks: localStorage.getItem("rtl-fixer-mdStripMarks") || "off",
   mdPrepare: localStorage.getItem("rtl-fixer-mdPrepare") || "off",
   mdAutoDir: localStorage.getItem("rtl-fixer-mdAutoDir") || "off",
 };
@@ -192,6 +201,7 @@ async function onMdSettingChange() {
 initSegmented("fix-mode-switcher", "fixMode", onSettingChange);
 initSegmented("list-dir-switcher", "listDir", onSettingChange);
 initSegmented("neutral-fix-switcher", "neutralFix", onSettingChange);
+initSegmented("md-strip-marks-switcher", "mdStripMarks", onMdSettingChange);
 initSegmented("md-prepare-switcher", "mdPrepare", onMdSettingChange);
 initSegmented("md-autodir-switcher", "mdAutoDir", onMdSettingChange);
 
