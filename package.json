@@ -1,36 +1,65 @@
 {
   "name": "rtl-fixer",
-  "version": "0.1.0",
-  "description": "Desktop app for fixing bidirectional RTL/LTR text display",
+  "version": "0.2.0",
+  "description": "RTL text fixer for bidirectional Persian-English content",
+  "main": "./out/main/index.js",
   "author": "refighdev <refighdev@users.noreply.github.com>",
-  "main": "main.js",
+  "license": "MIT",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder --linux",
-    "build:appimage": "electron-builder --linux AppImage",
-    "build:deb": "electron-builder --linux deb"
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "pack": "npm run build && electron-builder --linux",
+    "pack:appimage": "npm run build && electron-builder --linux AppImage",
+    "pack:deb": "npm run build && electron-builder --linux deb",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "cli:build": "npx esbuild cli/index.ts --bundle --platform=node --format=esm --outfile=dist-cli/rtl-fix.mjs --banner:js='#!/usr/bin/env node'"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "diff": "^8.0.3",
+    "framer-motion": "^12.35.1",
+    "marked": "^17.0.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-resizable-panels": "^4.7.1",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/diff": "^7.0.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "electron-vite": "^3.0.0",
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.56.1",
+    "vite": "^6.0.0",
+    "vitest": "^4.0.18"
   },
   "build": {
     "appId": "com.rfgh.rtl-fixer",
     "productName": "RTL Fixer",
+    "files": [
+      "out/**/*"
+    ],
     "linux": {
       "target": [
         "AppImage",
-        "deb"
+        "deb",
+        "tar.gz"
       ],
       "category": "Utility"
-    },
-    "files": [
-      "main.js",
-      "preload.js",
-      "renderer/**"
-    ]
-  },
-  "devDependencies": {
-    "electron": "^33.0.0",
-    "electron-builder": "^25.0.0"
-  },
-  "dependencies": {
-    "marked": "^17.0.4"
+    }
   }
 }
