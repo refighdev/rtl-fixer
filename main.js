@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, clipboard } = require("electron");
+const { app, BrowserWindow, ipcMain, clipboard, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -82,4 +82,10 @@ ipcMain.handle("read-clipboard", () => {
 ipcMain.handle("render-markdown", async (_, text) => {
   const m = await getMarked();
   return m.parse(text);
+});
+
+ipcMain.handle("open-external", (_, url) => {
+  if (typeof url === "string" && /^https?:\/\//i.test(url)) {
+    shell.openExternal(url);
+  }
 });
