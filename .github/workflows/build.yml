@@ -22,7 +22,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npx electron-builder --linux AppImage deb
+      - run: npx electron-builder --linux AppImage deb tar.gz
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -32,6 +32,7 @@ jobs:
           path: |
             dist/*.AppImage
             dist/*.deb
+            dist/*.tar.gz
           retention-days: 30
 
       - name: Release
@@ -41,3 +42,4 @@ jobs:
           files: |
             dist/*.AppImage
             dist/*.deb
+            dist/*.tar.gz
