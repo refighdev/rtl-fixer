@@ -1,9 +1,0 @@
-{
-  "id": "rtl-fixer",
-  "name": "RTL Fixer",
-  "version": "0.1.0",
-  "minAppVersion": "1.0.0",
-  "description": "Fix bidirectional text for mixed Persian-English content",
-  "author": "refighdev",
-  "isDesktopOnly": false
-}

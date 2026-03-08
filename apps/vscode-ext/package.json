@@ -1,0 +1,52 @@
+{
+  "name": "rtl-fixer",
+  "displayName": "RTL Fixer",
+  "description": "Fix bidirectional text for Persian-English mixed content",
+  "version": "0.3.0",
+  "publisher": "refighdev",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Formatters"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "rtlFixer.fixDocument",
+        "title": "RTL Fixer: Fix Document"
+      },
+      {
+        "command": "rtlFixer.fixSelection",
+        "title": "RTL Fixer: Fix Selection"
+      },
+      {
+        "command": "rtlFixer.stripMarks",
+        "title": "RTL Fixer: Strip All Marks"
+      },
+      {
+        "command": "rtlFixer.preview",
+        "title": "RTL Fixer: RTL Preview"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "rtlFixer.fixDocument",
+        "key": "ctrl+shift+r",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "dependencies": {
+    "@rtl-fixer/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "latest",
+    "@vscode/vsce": "latest"
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "package": "pnpm build && vsce package --allow-missing-repository",
+    "deploy:code": "pnpm package && code --install-extension rtl-fixer-$(node -p \"require('./package.json').version\").vsix",
+    "deploy:cursor": "pnpm package && cursor --install-extension rtl-fixer-$(node -p \"require('./package.json').version\").vsix",
+    "deploy": "pnpm package && code --install-extension rtl-fixer-$(node -p \"require('./package.json').version\").vsix && cursor --install-extension rtl-fixer-$(node -p \"require('./package.json').version\").vsix"
+  }
+}

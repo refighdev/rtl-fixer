@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>unicode-bidi: isolate — مثال‌ها</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: #0f0f14;
+    color: #e0e0e0;
+    padding: 40px 60px;
+    line-height: 2;
+    font-size: 16px;
+  }
+
+  h1 {
+    font-size: 28px;
+    color: #a78bfa;
+    margin-bottom: 40px;
+    border-bottom: 2px solid #a78bfa33;
+    padding-bottom: 12px;
+  }
+
+  .example {
+    margin-bottom: 48px;
+  }
+
+  .example h2 {
+    font-size: 18px;
+    color: #60a5fa;
+    margin-bottom: 16px;
+  }
+
+  .row {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 12px;
+  }
+
+  .box {
+    flex: 1;
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 1px solid #2a2a3a;
+    font-size: 16px;
+    line-height: 2;
+  }
+
+  .bad {
+    background: #1a1020;
+    border-color: #ef444444;
+  }
+
+  .good {
+    background: #101a20;
+    border-color: #22c55e44;
+  }
+
+  .label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .label.bad-label { color: #ef4444; }
+  .label.good-label { color: #22c55e; }
+
+  .isolated {
+    unicode-bidi: isolate;
+    direction: ltr;
+  }
+
+  code {
+    background: #1e1e2e;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #fbbf24;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+
+  .note {
+    color: #888;
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #2a2a3a;
+    margin: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>unicode-bidi: isolate — مقایسه با و بدون</h1>
+
+<!-- مثال ۱ -->
+<div class="example">
+  <h2>۱. نام کاربری انگلیسی وسط جمله فارسی</h2>
+  <div class="row">
+    <div class="box bad">
+      <span class="label bad-label">بدون isolate ❌</span>
+      <p dir="rtl">کاربر john_doe در سیستم ثبت‌نام کرد.</p>
+    </div>
+    <div class="box good">
+      <span class="label good-label">با isolate ✅</span>
+      <p dir="rtl">کاربر <span class="isolated">john_doe</span> در سیستم ثبت‌نام کرد.</p>
+    </div>
+  </div>
+  <p class="note">بدون isolate، نقطه آخر جمله ممکنه بچسبه به نام کاربری.</p>
+</div>
+
+<!-- مثال ۲ -->
+<div class="example">
+  <h2>۲. مسیر فایل وسط متن فارسی</h2>
+  <div class="row">
+    <div class="box bad">
+      <span class="label bad-label">بدون isolate ❌</span>
+      <p dir="rtl">فایل را در /home/user/documents/report.pdf ذخیره کنید.</p>
+    </div>
+    <div class="box good">
+      <span class="label good-label">با isolate ✅</span>
+      <p dir="rtl">فایل را در <span class="isolated">/home/user/documents/report.pdf</span> ذخیره کنید.</p>
+    </div>
+  </div>
+  <p class="note">بدون isolate، اسلش‌ها و ترتیب پوشه‌ها ممکنه جابجا بشن.</p>
+</div>
+
+<!-- مثال ۳ -->
+<div class="example">
+  <h2>۳. نسخه نرم‌افزار با پرانتز</h2>
+  <div class="row">
+    <div class="box bad">
+      <span class="label bad-label">بدون isolate ❌</span>
+      <p dir="rtl">نسخه جدید (v2.1.0-beta) منتشر شد.</p>
+    </div>
+    <div class="box good">
+      <span class="label good-label">با isolate ✅</span>
+      <p dir="rtl">نسخه جدید <span class="isolated">(v2.1.0-beta)</span> منتشر شد.</p>
+    </div>
+  </div>
+  <p class="note">بدون isolate، پرانتزها ممکنه برعکس بشن.</p>
+</div>
+
+<!-- مثال ۴ -->
+<div class="example">
+  <h2>۴. آدرس ایمیل</h2>
+  <div class="row">
+    <div class="box bad">
+      <span class="label bad-label">بدون isolate ❌</span>
+      <p dir="rtl">پیام به admin@example.com ارسال شد.</p>
+    </div>
+    <div class="box good">
+      <span class="label good-label">با isolate ✅</span>
+      <p dir="rtl">پیام به <span class="isolated">admin@example.com</span> ارسال شد.</p>
+    </div>
+  </div>
+  <p class="note">بدون isolate، علامت @ و نقطه ممکنه جابجا بشن.</p>
+</div>
+
+<!-- مثال ۵ -->
+<div class="example">
+  <h2>۵. دستور ترمینال وسط توضیح فارسی</h2>
+  <div class="row">
+    <div class="box bad">
+      <span class="label bad-label">بدون isolate ❌</span>
+      <p dir="rtl">برای نصب دستور npm install --save-dev eslint را اجرا کنید.</p>
+    </div>
+    <div class="box good">
+      <span class="label good-label">با isolate ✅</span>
+      <p dir="rtl">برای نصب دستور <span class="isolated">npm install --save-dev eslint</span> را اجرا کنید.</p>
+    </div>
+  </div>
+  <p class="note">بدون isolate، -- و ترتیب آرگومان‌ها ممکنه جابجا بشن.</p>
+</div>
+
+<!-- مثال ۶ -->
+<div class="example">
+  <h2>۶. URL وسط جمله</h2>
+  <div class="row">
+    <div class="box bad">
+      <span class="label bad-label">بدون isolate ❌</span>
+      <p dir="rtl">مستندات در https://docs.example.com/api/v2/users?lang=fa موجوده.</p>
+    </div>
+    <div class="box good">
+      <span class="label good-label">با isolate ✅</span>
+      <p dir="rtl">مستندات در <span class="isolated">https://docs.example.com/api/v2/users?lang=fa</span> موجوده.</p>
+    </div>
+  </div>
+  <p class="note">بدون isolate، علائم ?، /، و = ممکنه جابجا بشن و URL نامعتبر به نظر برسه.</p>
+</div>
+
+<hr>
+
+<p style="color:#666; font-size:14px; text-align:center;">
+  این مثال‌ها نشون میدن که <code>unicode-bidi: isolate</code> برای محتوای <strong>inline</strong> (کلمه/عبارت وسط جمله) کاربرد داره.
+  <br>
+  رویکرد RTL Fixer ما <strong>block-level</strong> (خط به خط) هست و از RLM/LRM استفاده میکنه که همه جا کار کنه.
+</p>
+
+</body>
+</html>

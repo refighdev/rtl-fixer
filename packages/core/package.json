@@ -1,0 +1,29 @@
+{
+  "name": "@rtl-fixer/core",
+  "version": "1.0.0",
+  "description": "Core BiDi text fixing logic for RTL Fixer",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./bidi": {
+      "import": "./dist/bidi.js",
+      "types": "./dist/bidi.d.ts"
+    },
+    "./markdown": {
+      "import": "./dist/markdown.js",
+      "types": "./dist/markdown.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

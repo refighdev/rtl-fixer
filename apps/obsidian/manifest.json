@@ -1,0 +1,9 @@
+{
+	"id": "rtl-fixer",
+	"name": "RTL Fixer",
+	"version": "1.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "افزودن نشانه RLM به خطوط دوزبانه فارسی-انگلیسی در مارک‌داون",
+	"author": "refighdev",
+	"isDesktopOnly": false
+}
