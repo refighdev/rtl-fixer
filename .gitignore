@@ -1,3 +1,16 @@
 node_modules/
 dist/
 out/
+target/
+*.vsix
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.exe
+*.msi
+
+# Tauri generated icons (keep only essential ones)
+apps/tauri/src-tauri/icons/ios/
+apps/tauri/src-tauri/icons/android/
+apps/tauri/app-icon.png

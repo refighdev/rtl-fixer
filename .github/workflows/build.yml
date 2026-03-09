@@ -1,46 +1,129 @@
-name: Build & Release
+name: Build
 
 on:
   push:
     branches: [master]
     tags: ["v*"]
+  pull_request:
+    branches: [master]
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-electron:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            args: --linux AppImage deb
+          - os: macos-latest
+            args: --mac dmg
+          - os: windows-latest
+            args: --win nsis
 
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 22
+          cache: pnpm
 
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
 
-      - run: npx electron-vite build
-      - run: npx electron-builder --linux AppImage deb tar.gz
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: pnpm build:core
+
+      - name: Build Electron
+        run: pnpm --filter @rtl-fixer/electron build && pnpm --filter @rtl-fixer/electron exec electron-builder ${{ matrix.args }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: linux-builds
+          name: electron-${{ matrix.os }}
           path: |
-            dist/*.AppImage
-            dist/*.deb
-            dist/*.tar.gz
-          retention-days: 30
+            apps/electron/dist/*.AppImage
+            apps/electron/dist/*.deb
+            apps/electron/dist/*.dmg
+            apps/electron/dist/*.exe
+          if-no-files-found: ignore
 
-      - name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
+  build-tauri:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            targets: deb,appimage
+          - os: macos-latest
+            targets: dmg
+          - os: windows-latest
+            targets: nsis
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/tauri/src-tauri
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build:core
+
+      - name: Build Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/tauri
+          tauriScript: pnpm exec tauri
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tauri-${{ matrix.os }}
+          path: |
+            apps/tauri/src-tauri/target/release/bundle/**/*.AppImage
+            apps/tauri/src-tauri/target/release/bundle/**/*.deb
+            apps/tauri/src-tauri/target/release/bundle/**/*.dmg
+            apps/tauri/src-tauri/target/release/bundle/**/*.exe
+            apps/tauri/src-tauri/target/release/bundle/**/*.msi
+          if-no-files-found: ignore
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-electron, build-tauri]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/*.AppImage
-            dist/*.deb
-            dist/*.tar.gz
+          files: artifacts/**/*
+          generate_release_notes: true
