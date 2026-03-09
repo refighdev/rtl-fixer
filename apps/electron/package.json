@@ -45,6 +45,7 @@
     "vite": "^6.0.0",
     "vitest": "^4.0.18"
   },
+  "homepage": "https://github.com/refighdev/rtl-fixer",
   "build": {
     "appId": "com.rfgh.rtl-fixer",
     "productName": "RTL Fixer",
