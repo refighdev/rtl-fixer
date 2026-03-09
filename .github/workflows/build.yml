@@ -47,10 +47,7 @@ jobs:
         with:
           name: electron-${{ matrix.os }}
           path: |
-            apps/electron/dist/*.AppImage
-            apps/electron/dist/*.deb
-            apps/electron/dist/*.dmg
-            apps/electron/dist/*.exe
+            apps/electron/dist/RTL-Fixer-*
           if-no-files-found: ignore
 
   build-tauri:

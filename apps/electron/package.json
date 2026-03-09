@@ -53,6 +53,7 @@
   "build": {
     "appId": "com.rfgh.rtl-fixer",
     "productName": "RTL Fixer",
+    "artifactName": "RTL-Fixer-${version}-${arch}.${ext}",
     "files": ["out/**/*"],
     "linux": {
       "target": ["AppImage", "deb", "tar.gz"],
