@@ -2,6 +2,10 @@
   "name": "@rtl-fixer/electron",
   "version": "0.2.0",
   "description": "RTL Fixer desktop application",
+  "author": {
+    "name": "refighdev",
+    "email": "refighdev@users.noreply.github.com"
+  },
   "main": "./out/main/index.js",
   "private": true,
   "scripts": {
