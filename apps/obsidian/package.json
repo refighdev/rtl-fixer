@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"deploy": "pnpm build && cp main.js manifest.json /mnt/mid/my/obsidian/.obsidian/plugins/rtl-fixer"
+		"deploy": "pnpm build && cp main.js manifest.json styles.css /mnt/mid/my/obsidian/.obsidian/plugins/rtl-fixer"
 	},
 	"dependencies": {
 		"@rtl-fixer/core": "workspace:*"

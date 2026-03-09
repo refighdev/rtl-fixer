@@ -15,9 +15,11 @@
     "build:cli": "pnpm --filter @rtl-fixer/cli build",
     "build:vscode": "pnpm --filter ./apps/vscode-ext build",
     "build:obsidian": "pnpm --filter @rtl-fixer/obsidian build",
-    "build:all": "pnpm build:core && pnpm build:electron && pnpm build:pwa && pnpm build:cli && pnpm build:vscode && pnpm build:obsidian",
+    "build:tauri": "pnpm build:core && pnpm --filter @rtl-fixer/tauri build",
+    "build:all": "pnpm build:core && pnpm build:electron && pnpm build:tauri && pnpm build:pwa && pnpm build:cli && pnpm build:vscode && pnpm build:obsidian",
     "dev": "pnpm build:core && pnpm --filter @rtl-fixer/electron dev",
     "dev:electron": "pnpm build:core && pnpm --filter @rtl-fixer/electron dev",
+    "dev:tauri": "pnpm build:core && pnpm --filter @rtl-fixer/tauri dev",
     "dev:pwa": "pnpm build:core && pnpm --filter @rtl-fixer/pwa dev",
     "test": "pnpm --filter @rtl-fixer/electron test"
   }

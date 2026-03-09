@@ -187,6 +187,75 @@ function buildPreviewHtml(text: string): string {
 
 let previewPanel: vscode.WebviewPanel | undefined;
 
+let rlmDecoration: vscode.TextEditorDecorationType;
+let lrmDecoration: vscode.TextEditorDecorationType;
+let isHighlighting = false;
+
+function createDecorations() {
+  rlmDecoration = vscode.window.createTextEditorDecorationType({
+    before: { contentText: "⟵RLM", color: "#e94560", fontStyle: "italic" },
+    backgroundColor: "rgba(233, 69, 96, 0.15)",
+    border: "1px solid rgba(233, 69, 96, 0.4)",
+    borderRadius: "2px",
+  });
+  lrmDecoration = vscode.window.createTextEditorDecorationType({
+    before: { contentText: "LRM⟶", color: "#3b82f6", fontStyle: "italic" },
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    border: "1px solid rgba(59, 130, 246, 0.4)",
+    borderRadius: "2px",
+  });
+}
+
+function updateHighlights(editor: vscode.TextEditor) {
+  if (!isHighlighting) {
+    editor.setDecorations(rlmDecoration, []);
+    editor.setDecorations(lrmDecoration, []);
+    return;
+  }
+
+  const text = editor.document.getText();
+  const rlmRanges: vscode.Range[] = [];
+  const lrmRanges: vscode.Range[] = [];
+
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === RLM || text[i] === LRM) {
+      const pos = editor.document.positionAt(i);
+      const range = new vscode.Range(pos, pos.translate(0, 1));
+      if (text[i] === RLM) rlmRanges.push(range);
+      else lrmRanges.push(range);
+    }
+  }
+
+  editor.setDecorations(rlmDecoration, rlmRanges);
+  editor.setDecorations(lrmDecoration, lrmRanges);
+}
+
+function updateStatusBar(
+  statusBar: vscode.StatusBarItem,
+  editor: vscode.TextEditor | undefined
+) {
+  if (!editor) {
+    statusBar.hide();
+    return;
+  }
+  const text = editor.document.getText();
+  let rlm = 0;
+  let lrm = 0;
+  for (const ch of text) {
+    if (ch === RLM) rlm++;
+    else if (ch === LRM) lrm++;
+  }
+  const total = rlm + lrm;
+  if (total === 0) {
+    statusBar.text = "$(arrow-right) RTL";
+    statusBar.tooltip = "RTL Fixer: Fix Document";
+  } else {
+    statusBar.text = `$(arrow-right) BiDi: ${total} (${rlm}ر ${lrm}L)`;
+    statusBar.tooltip = `RTL Fixer: ${rlm} RLM + ${lrm} LRM — Click to Fix`;
+  }
+  statusBar.show();
+}
+
 function showPreview(context: vscode.ExtensionContext) {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -243,7 +312,33 @@ function showPreview(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  createDecorations();
+
+  const statusBar = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    100
+  );
+  statusBar.command = "rtlFixer.fixDocument";
+  updateStatusBar(statusBar, vscode.window.activeTextEditor);
+
   context.subscriptions.push(
+    statusBar,
+    rlmDecoration,
+    lrmDecoration,
+
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      updateStatusBar(statusBar, editor);
+      if (editor) updateHighlights(editor);
+    }),
+
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && e.document === editor.document) {
+        updateStatusBar(statusBar, editor);
+        updateHighlights(editor);
+      }
+    }),
+
     vscode.commands.registerTextEditorCommand(
       "rtlFixer.fixDocument",
       (editor) => {
@@ -323,12 +418,23 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand("rtlFixer.preview", () => {
       showPreview(context);
+    }),
+
+    vscode.commands.registerCommand("rtlFixer.highlightMarks", () => {
+      isHighlighting = !isHighlighting;
+      const editor = vscode.window.activeTextEditor;
+      if (editor) updateHighlights(editor);
+      vscode.window.showInformationMessage(
+        isHighlighting
+          ? "RTL Fixer: هایلایت نشانه‌ها روشن شد"
+          : "RTL Fixer: هایلایت نشانه‌ها خاموش شد"
+      );
     })
   );
 }
 
 export function deactivate() {
-  if (previewPanel) {
-    previewPanel.dispose();
-  }
+  previewPanel?.dispose();
+  rlmDecoration?.dispose();
+  lrmDecoration?.dispose();
 }

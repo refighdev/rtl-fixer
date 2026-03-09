@@ -2,7 +2,7 @@
   "name": "rtl-fixer",
   "displayName": "RTL Fixer",
   "description": "Fix bidirectional text for Persian-English mixed content",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "refighdev",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Formatters"],
@@ -25,20 +25,15 @@
       {
         "command": "rtlFixer.preview",
         "title": "RTL Fixer: RTL Preview"
-      }
-    ],
-    "keybindings": [
+      },
       {
-        "command": "rtlFixer.fixDocument",
-        "key": "ctrl+shift+r",
-        "when": "editorTextFocus"
+        "command": "rtlFixer.highlightMarks",
+        "title": "RTL Fixer: Toggle BiDi Mark Highlighting"
       }
     ]
   },
-  "dependencies": {
-    "@rtl-fixer/core": "workspace:*"
-  },
   "devDependencies": {
+    "@rtl-fixer/core": "workspace:*",
     "esbuild": "latest",
     "@vscode/vsce": "latest"
   },

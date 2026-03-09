@@ -1,0 +1,16 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for RTL Fixer",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "clipboard-manager:default",
+    "clipboard-manager:allow-read-text",
+    "clipboard-manager:allow-write-text",
+    "dialog:default",
+    "dialog:allow-save",
+    "fs:default",
+    "fs:allow-write-text-file",
+    "shell:allow-open"
+  ]
+}

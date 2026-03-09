@@ -1,0 +1,12 @@
+/* Reading view */
+.markdown-rendered code,
+.markdown-preview-view code {
+  unicode-bidi: isolate;
+  direction: ltr;
+}
+
+/* Live preview (CodeMirror) */
+.cm-inline-code {
+  unicode-bidi: isolate;
+  direction: ltr;
+}
