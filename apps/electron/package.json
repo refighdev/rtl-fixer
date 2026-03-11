@@ -1,6 +1,6 @@
 {
   "name": "@rtl-fixer/electron",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "RTL Fixer desktop application",
   "author": {
     "name": "refighdev",
@@ -53,7 +53,7 @@
   "build": {
     "appId": "com.rfgh.rtl-fixer",
     "productName": "RTL Fixer",
-    "artifactName": "RTL-Fixer-${version}-${arch}.${ext}",
+    "artifactName": "RTL-Fixer-Electron-${version}-${arch}.${ext}",
     "files": ["out/**/*"],
     "linux": {
       "target": ["AppImage", "deb", "tar.gz"],

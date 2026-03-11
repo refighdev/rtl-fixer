@@ -1,0 +1,35 @@
+---
+description: Git push and release workflow — always tag, build, and create GitHub Release
+alwaysApply: true
+---
+
+# Git Push & Release Workflow
+
+When the user says "push", "پوش کن", "بیلد بگیر", or any combination:
+
+## Always do ALL of these steps
+
+1. **Commit** any uncommitted changes first
+2. **Bump version** in relevant `package.json` files if changes warrant it
+3. **Tag** with `git tag v<version>` (read version from root or relevant package.json)
+4. **Push** both commits AND tags: `git push origin master && git push origin --tags`
+5. **Wait** for CI to finish: `gh run watch <id>`
+6. **Verify** all jobs passed: `gh run view <id>`
+7. **Confirm** release appeared: `gh release view v<version>`
+
+## If build fails
+
+- Read the error: `gh run view <id> --log-failed | grep -iE "(error|failed|ERR)"`
+- Fix the issue, commit, push (WITHOUT new tag — re-run failed workflow instead: `gh run rerun <id> --failed`)
+- If re-run also fails, delete tag, fix, re-tag, push
+
+## Tag format
+
+- Always use `v` prefix: `v0.2.0`, `v1.0.0`
+- Follow semver: patch for fixes, minor for features, major for breaking changes
+
+## Never forget
+
+- Artifacts must appear in GitHub Releases, not just Actions
+- Release = tag push triggers the `release` job in CI
+- Without a tag, no release is created

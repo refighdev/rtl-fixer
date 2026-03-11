@@ -47,7 +47,7 @@ jobs:
         with:
           name: electron-${{ matrix.os }}
           path: |
-            apps/electron/dist/RTL-Fixer-*
+            apps/electron/dist/RTL-Fixer-Electron-*
           if-no-files-found: ignore
 
   build-tauri:
@@ -123,4 +123,32 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/**/*
-          generate_release_notes: true
+          body: |
+            ## Downloads / دانلود
+
+            ### ⚡ Tauri (Recommended — سبک و سریع)
+
+            | OS | File | Size |
+            |---|---|---|
+            | 🐧 Linux (deb) | `RTL.Fixer.Tauri_${{ github.ref_name }}_amd64.deb` | ~5 MB |
+            | 🐧 Linux (AppImage) | `RTL.Fixer.Tauri_${{ github.ref_name }}_amd64.AppImage` | ~74 MB |
+            | 🍎 macOS (dmg) | `RTL.Fixer.Tauri_${{ github.ref_name }}_aarch64.dmg` | ~4 MB |
+            | 🪟 Windows (exe) | `RTL.Fixer.Tauri_${{ github.ref_name }}_x64-setup.exe` | ~3 MB |
+            | 🪟 Windows (msi) | `RTL.Fixer.Tauri_${{ github.ref_name }}_x64_en-US.msi` | ~4 MB |
+
+            ### 🖥 Electron (Full — کامل)
+
+            | OS | File | Size |
+            |---|---|---|
+            | 🐧 Linux (AppImage) | `RTL-Fixer-Electron-${{ github.ref_name }}-x86_64.AppImage` | ~107 MB |
+            | 🐧 Linux (deb) | `RTL-Fixer-Electron-${{ github.ref_name }}-amd64.deb` | ~73 MB |
+            | 🍎 macOS (dmg) | `RTL-Fixer-Electron-${{ github.ref_name }}-arm64.dmg` | ~97 MB |
+            | 🪟 Windows (exe) | `RTL-Fixer-Electron-${{ github.ref_name }}-x64.exe` | ~80 MB |
+
+            ---
+
+            **Tauri** uses the system webview — much smaller and faster.
+            **Electron** bundles Chromium — larger but works everywhere.
+
+            نسخه **Tauri** از وب‌ویوی سیستم استفاده میکنه — خیلی سبک‌تر و سریع‌تره.
+            نسخه **Electron** کرومیوم رو باندل میکنه — بزرگ‌تره ولی همه‌جا کار میکنه.

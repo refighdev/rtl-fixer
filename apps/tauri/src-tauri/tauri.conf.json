@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicedozie4u/tauri-schema/main/tauri.conf.json",
-  "productName": "RTL Fixer",
-  "version": "0.2.0",
+  "productName": "RTL Fixer Tauri",
+  "version": "0.2.1",
   "identifier": "com.rfgh.rtl-fixer",
   "build": {
     "frontendDist": "../dist",
